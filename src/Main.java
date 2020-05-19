@@ -10,7 +10,28 @@ public class Main {
 		FileProcessor fp = new FileProcessor();
 		final File folder = new File("/home/taras/study/parallel/aclImdb/");
 
+		int nThreads = 2000;
+
 		fp.listFilesForFolder(folder);
-		System.out.println(fp.files);
+		System.out.println(fp.files.size());
+		ArrayList<Parser> parsers = new ArrayList<>();
+		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+		ArrayList<Map<String, Integer>> results = new ArrayList<>();
+		try {
+			for (int i = 0; i < nThreads; i++)
+				parsers.add(new Parser(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads))));
+			for (Future<Map<String, Integer>> result : executor.invokeAll(parsers)) {
+				results.add(result.get());
+			}
+			executor.shutdown();
+			int s = 0;
+			for (Map<String, Integer> m : results)
+			{
+				s += m.size();
+				System.out.println(m.size());
+			}
+			System.out.println("Total: " + s);
+		}
+		catch (Exception e){}
 	}
 }
