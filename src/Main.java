@@ -8,9 +8,9 @@ public class Main {
 	public static void main(String[]args)
 	{
 		FileProcessor fp = new FileProcessor();
-		final File folder = new File("/home/taras/study/parallel/aclImdb");
+		final File folder = new File("/home/taras/study/parallel/aclImdb/");
 
 		fp.listFilesForFolder(folder);
-		System.out.println(fp.files.size());
+		System.out.println(fp.files);
 	}
 }
