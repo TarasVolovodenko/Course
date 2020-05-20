@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import java.io.File;
 import java.util.regex.*;
 
-public class Parser implements Callable<Map<String, Integer>> {
+public class Parser implements Callable<Map<String, Map<Integer, Integer>>> {
 	ArrayList<File> files;
 	public Parser(ArrayList<File> files)	{
 		this.files = files;
@@ -30,7 +30,7 @@ public class Parser implements Callable<Map<String, Integer>> {
 				Pattern pattern =
 						Pattern.compile("\\w+", Pattern.UNICODE_CHARACTER_CLASS
 								| Pattern.CASE_INSENSITIVE);
-				Matcher matcher = pattern.matcher(temp);
+				Matcher matcher = pattern.matcher(temp.toLowerCase());
 
 				while (matcher.find())
 					words.add(matcher.group());
@@ -45,13 +45,20 @@ public class Parser implements Callable<Map<String, Integer>> {
 		return null;
 	}
 	@Override
-	public Map<String, Integer> call() throws Exception {
-		Map<String, Integer> dict = new HashMap<String, Integer>();
+	public Map<String, Map<Integer, Integer>> call() throws Exception {
+		Map<String, Map<Integer, Integer>> dict = new HashMap<String, Map<Integer, Integer>>();
 		ArrayList<String> temp;
+		Map<Integer, Integer> t;
 		for (File file : files)	{
 			temp = parse(file);
-			for (String word : temp)
-				dict.put(word, getDocID(file)); // fix collisions
+			for (String word : temp) {
+				t = dict.get(word);
+				if (t == null)
+					t = new HashMap<Integer, Integer>();
+				t.computeIfAbsent(getDocID(file), k -> 0);
+				t.compute(getDocID(file), (k, v) -> v + 1);
+				dict.put(word, t);
+			}
 		}
 		return dict;
 	}
