@@ -1,14 +1,15 @@
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import java.io.File;
 import java.util.regex.*;
 
 public class Parser implements Callable<Map<String, Map<Integer, Integer>>> {
 	ArrayList<File> files;
-	public Parser(ArrayList<File> files)	{
+	Async parent;
+	public Parser(ArrayList<File> files, Async parent)	{
 		this.files = files;
+		this.parent = parent;
 	}
 
 	public int getDocID(File file)	{
@@ -21,7 +22,7 @@ public class Parser implements Callable<Map<String, Map<Integer, Integer>>> {
 		try {
 			Scanner sc = new Scanner(file);
 			String temp;
-			ArrayList<String> words = new ArrayList<String>();
+			ArrayList<String> words = new ArrayList<>();
 			while (sc.hasNextLine())	{
 				temp = sc.nextLine();
 				temp = temp.replaceAll("<br />"," ");
@@ -45,8 +46,8 @@ public class Parser implements Callable<Map<String, Map<Integer, Integer>>> {
 		return null;
 	}
 	@Override
-	public Map<String, Map<Integer, Integer>> call() throws Exception {
-		Map<String, Map<Integer, Integer>> dict = new HashMap<String, Map<Integer, Integer>>();
+	public Map<String, Map<Integer, Integer>> call() {
+		Map<String, Map<Integer, Integer>> dict = new HashMap<>();
 		ArrayList<String> temp;
 		Map<Integer, Integer> t;
 		for (File file : files)	{
@@ -54,8 +55,8 @@ public class Parser implements Callable<Map<String, Map<Integer, Integer>>> {
 			for (String word : temp) {
 				t = dict.get(word);
 				if (t == null)
-					t = new HashMap<Integer, Integer>();
-				t.computeIfAbsent(getDocID(file), k -> 0);
+					t = new HashMap<>();
+				t.putIfAbsent(getDocID(file), 0);
 				t.compute(getDocID(file), (k, v) -> v + 1);
 				dict.put(word, t);
 			}
