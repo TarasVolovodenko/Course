@@ -7,7 +7,7 @@ import java.util.regex.*;
 public class Async {
 
 	public ConcurrentSkipListMap<String, Map<Integer, Integer>> dictionary;
-	public ArrayList<ParserAsyncHash> parsers;
+	public ArrayList<ParserAsync> parsers;
 
 	public Async(int nThreads)	{
 
@@ -24,7 +24,7 @@ public class Async {
 		try {
 
 			for (int i = 0; i < nThreads; i++)
-				futures.add(executor.submit(new ParserAsyncHash(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)))));
+				futures.add(executor.submit(new ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)))));
 
 			for (Future future : futures)
 				future.get();
@@ -42,11 +42,11 @@ public class Async {
 
 
 
-	class ParserAsyncHash implements Runnable {
+	class ParserAsync implements Runnable {
 
 		ArrayList<File> files;
 
-		public ParserAsyncHash(ArrayList<File> files)	{
+		public ParserAsync(ArrayList<File> files)	{
 			this.files = files;
 		}
 
