@@ -5,41 +5,21 @@ import java.util.stream.Collectors;
 import java.io.File;
 
 public class Main {
-	public static void main(String[]args)
-	{
-		FileProcessor fp = new FileProcessor();
-		final File folder = new File("/home/taras/study/parallel/aclImdb/");
+	public static void main(String[]args) {
 
-		int nThreads = 50;
+		final File folder = new File(args[1]), vocab = new File(args[0]);
 
-		fp.listFilesForFolder(folder);
-		System.out.println(fp.files.size());
-		ArrayList<Parser> parsers = new ArrayList<>();
-		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-		ArrayList<Map<String, Map<Integer, Integer>>> results = new ArrayList<>();
+//		Speed test
+		Async a = null;
+		for (int nThreads = 128; nThreads <= 1024; nThreads *= 2) {
+			a = new Async(nThreads, vocab, folder);
+			long start = System.currentTimeMillis();
+			a.indexHash();
+			long mid = System.currentTimeMillis();
+			a.indexTree();
+			long end = System.currentTimeMillis();
+			System.out.println((mid - start) + "\t" + (end - mid));
+		}
 
-		Async a = new Async(nThreads);
-
-//		try {
-//
-//			for (int i = 0; i < nThreads; i++)
-//				parsers.add(new Parser(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)), a));
-//
-//			for (Future<Map<String, Map<Integer, Integer>>> result : executor.invokeAll(parsers)) {
-//				results.add(result.get());
-//			}
-//
-//			executor.shutdown();
-//
-//
-//			int s = 0;
-//			for (Map<String, Map<Integer, Integer>> m : results)
-//			{
-//				s += m.size();
-//				System.out.println(m.size());
-//			}
-//			System.out.println("Total: " + s);
-//		}
-//		catch (Exception e){}
 	}
 }

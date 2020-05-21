@@ -3,9 +3,12 @@ import java.io.File;
 
 public class FileProcessor {
 	public ArrayList<File> files;
+	public  FileProcessor()	{
+		files = new ArrayList<>();
+	}
 	public ArrayList<File> listFilesForFolder(final File folder) {
 
-		files = new ArrayList<>();
+
 		File[]f = folder.listFiles();
 
 		int i = 0;
@@ -26,7 +29,7 @@ public class FileProcessor {
 				}
 				catch (Exception e)
 				{
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
 
 		return files;

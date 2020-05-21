@@ -6,16 +6,51 @@ import java.util.regex.*;
 
 public class Async {
 
-	public ConcurrentSkipListMap<String, Map<Integer, Integer>> dictionary;
+	public Map<String, Map<Integer, Integer>> dictionary;
 	public ArrayList<ParserAsync> parsers;
+	public final File vocab;
+	public final File folder;
+	public final int nThreads;
 
-	public Async(int nThreads)	{
+	public Async(int nThreads, final File vocab, final File folder)	{
 
-		dictionary = new ConcurrentSkipListMap<>();
+		this.vocab = vocab;
+		this.folder = folder;
+		this.nThreads = nThreads;
+	}
 
+	public void indexHash()	{
+		dictionary = new ConcurrentHashMap<String, Map<Integer, Integer>>(100000, (float)0.75, nThreads);
+//		fillVocabulary();
 		FileProcessor fp = new FileProcessor();
-		final File folder = new File("/home/taras/study/parallel/aclImdb/");
 		fp.listFilesForFolder(folder);
+//		System.out.println(fp.files.size());
+
+		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+		ArrayList<Future> futures = new ArrayList<>();
+		parsers = new ArrayList<>();
+
+		try {
+
+			for (int i = 0; i < nThreads; i++)
+				futures.add(executor.submit(new Async.ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)))));
+
+			for (Future future : futures)
+				future.get();
+
+			executor.shutdown();
+
+//			System.out.println("Total: " + dictionary.size());
+		}
+		catch (Exception e){}
+	}
+
+	public void indexTree()	{
+		dictionary = new ConcurrentSkipListMap<>();
+//		fillVocabulary();
+		FileProcessor fp = new FileProcessor();
+		fp.listFilesForFolder(folder);
+//		System.out.println(fp.files.size());
 
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		ArrayList<Future> futures = new ArrayList<>();
@@ -31,16 +66,22 @@ public class Async {
 
 			executor.shutdown();
 
-			dictionary.forEach((k, v) -> {
-				System.out.println(k + " " + v.size());
-			});
-			System.out.println("Total: " + dictionary.size());
+//			System.out.println("Total: " + dictionary.size());
 		}
 		catch (Exception e){}
 	}
 
-
-
+	public void fillVocabulary()	{
+		try {
+			Scanner vocabScanner = new Scanner(vocab);
+			while (vocabScanner.hasNextLine()) {
+				dictionary.put(vocabScanner.nextLine(), new HashMap<>());
+			}
+			vocabScanner.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 
 	class ParserAsync implements Runnable {
 
