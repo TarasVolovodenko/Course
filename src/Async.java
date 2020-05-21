@@ -5,11 +5,11 @@ import java.io.File;
 import java.util.regex.*;
 
 public class Async {
-	public ConcurrentHashMap<String, Map<Integer, Integer>> dictionary;
+	public ConcurrentSkipListMap<String, Map<Integer, Integer>> dictionary;
 	public ArrayList<ParserAsync> parsers;
 	public Async(int nThreads)	{
 
-		dictionary = new ConcurrentHashMap<>(20000, 1, nThreads);
+		dictionary = new ConcurrentSkipListMap<>();
 
 		FileProcessor fp = new FileProcessor();
 		final File folder = new File("/home/taras/study/parallel/aclImdb/");
@@ -21,13 +21,18 @@ public class Async {
 		try {
 
 			for (int i = 0; i < nThreads; i++)
-//				parsers.add(new ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)), this));
-				futures.add(executor.submit(new ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)), this)));
+				futures.add(executor.submit(new ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)))));
+
 			for (Future future : futures)	{
 				future.get();
 			}
+
 			executor.shutdown();
 
+
+			dictionary.forEach((k, v) -> {
+				System.out.println(k + " " + v.size());
+			});
 			System.out.println("Total: " + dictionary.size());
 		}
 		catch (Exception e){}
@@ -38,10 +43,8 @@ public class Async {
 
 	class ParserAsync implements Runnable {
 		ArrayList<File> files;
-		Async parent;
-		public ParserAsync(ArrayList<File> files, Async parent)	{
+		public ParserAsync(ArrayList<File> files)	{
 			this.files = files;
-			this.parent = parent;
 		}
 
 		public int getDocID(File file)	{
@@ -96,7 +99,10 @@ public class Async {
 						do {
 							oldV = dictionary.get(word);
 							newV = new HashMap<>(oldV);
-							newV.computeIfPresent(getDocID(file), (k, v) -> v + 1);
+							if (newV.containsKey(getDocID(file)))
+								newV.computeIfPresent(getDocID(file), (k, v) -> v + 1);
+							else
+								newV.putIfAbsent(getDocID(file), 1);
 						}
 						while (!dictionary.replace(word, oldV, newV));
 					}
