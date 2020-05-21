@@ -4,14 +4,14 @@ import java.util.concurrent.*;
 import java.io.File;
 import java.util.regex.*;
 
-public class Async {
+public class AsyncHash {
 
-	public ConcurrentSkipListMap<String, Map<Integer, Integer>> dictionary;
+	public ConcurrentHashMap<String, Map<Integer, Integer>> dictionary;
 	public ArrayList<ParserAsyncHash> parsers;
 
-	public Async(int nThreads)	{
+	public AsyncHash(int nThreads)	{
 
-		dictionary = new ConcurrentSkipListMap<>();
+		dictionary = new ConcurrentHashMap<>();
 
 		FileProcessor fp = new FileProcessor();
 		final File folder = new File("/home/taras/study/parallel/aclImdb/");
