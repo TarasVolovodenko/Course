@@ -9,25 +9,26 @@ public class Async {
 	public Map<String, Map<String, Integer>> dictionary;
 	public ArrayList<ParserAsync> parsers;
 	public final File vocab;
-	public final File folder;
+	public ArrayList<File> folders;
 	public final int nThreads;
 
-	public Async(int nThreads, final File vocab, final File folder)	{
+	public Async(int nThreads, final File vocab, ArrayList<File> folders)	{
 
 		this.vocab = vocab; // initial vocabulary
-		this.folder = folder; // dataset directory
+		this.folders = folders; // dataset directories
 		this.nThreads = nThreads; // number of threads
 	}
 
 	public void indexHash()	{
 		dictionary = new ConcurrentHashMap<String, Map<String, Integer>>(100000, (float)0.75, nThreads);
 
-//		Not using pre-builded Imdb vocabulary because of time economy
-//		fillVocabulary();
+		if (vocab != null)
+			fillVocabulary();
 
 //		select files for indexing
 		FileProcessor fp = new FileProcessor();
-		fp.listFilesForFolder(folder);
+		for (File folder : folders)
+			fp.listFilesForFolder(folder);
 
 //		multi-thread index building
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
@@ -50,12 +51,13 @@ public class Async {
 	public void indexTree()	{
 		dictionary = new ConcurrentSkipListMap<>();
 
-//		Not using pre-builded Imdb vocabulary because of time economy
-//		fillVocabulary();
+		if (vocab != null)
+			fillVocabulary();
 
 //		select files for indexing
 		FileProcessor fp = new FileProcessor();
-		fp.listFilesForFolder(folder);
+		for (File folder : folders)
+			fp.listFilesForFolder(folder);
 
 //		multi-thread index building
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
