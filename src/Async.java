@@ -6,7 +6,7 @@ import java.util.regex.*;
 
 public class Async {
 
-	public Map<String, Map<Integer, Integer>> dictionary;
+	public Map<String, Map<String, Integer>> dictionary;
 	public ArrayList<ParserAsync> parsers;
 	public final File vocab;
 	public final File folder;
@@ -20,7 +20,7 @@ public class Async {
 	}
 
 	public void indexHash()	{
-		dictionary = new ConcurrentHashMap<String, Map<Integer, Integer>>(100000, (float)0.75, nThreads);
+		dictionary = new ConcurrentHashMap<String, Map<String, Integer>>(100000, (float)0.75, nThreads);
 //		fillVocabulary();
 		FileProcessor fp = new FileProcessor();
 		fp.listFilesForFolder(folder);
@@ -83,6 +83,17 @@ public class Async {
 		}
 	}
 
+	public void search(String request)  {
+		String[] words = request.trim().toLowerCase().split(" +");
+		Set<String> result = new HashSet<>(dictionary.get(words[0]).keySet());
+		for (String word : words)	{
+			result.retainAll(dictionary.get(word).keySet());
+		}
+		for (String id : result)	{
+			System.out.println(id + ".txt");
+		}
+	}
+
 	class ParserAsync implements Runnable {
 
 		ArrayList<File> files;
@@ -91,10 +102,13 @@ public class Async {
 			this.files = files;
 		}
 
-		public int getDocID(File file)	{
+		public String getDocID(File file)	{
 			if (file != null)
-				return Integer.parseInt(file.getName().split("_")[0] + file.getName().split("_")[1].split(".txt")[0]);
-			return 0;
+			{
+				String id = file.getName().split(".txt")[0];
+				return id;
+			}
+			return null;
 		}
 
 		public ArrayList<String> parse(File file)	{
@@ -125,8 +139,9 @@ public class Async {
 		}
 		@Override
 		public void run() {
+			long start = System.currentTimeMillis();
 			ArrayList<String> temp;
-			Map<Integer, Integer> oldV, newV;
+			Map<String, Integer> oldV, newV;
 
 			for (File file : files)	{
 
@@ -156,6 +171,8 @@ public class Async {
 					}
 				}
 			}
+			long end = System.currentTimeMillis();
+			System.out.println(end - start);
 		}
 	}
 
