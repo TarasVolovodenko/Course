@@ -8,6 +8,6 @@ javac Main.java
 
 ## Run
 ```bash
-java Main [vocabulary-path] [dataset-pass] [threads-number]
+java Main [vocabulary-path] [dataset-path] [threads-number]
 ```
 
