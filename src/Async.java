@@ -14,44 +14,50 @@ public class Async {
 
 	public Async(int nThreads, final File vocab, final File folder)	{
 
-		this.vocab = vocab;
-		this.folder = folder;
-		this.nThreads = nThreads;
+		this.vocab = vocab; // initial vocabulary
+		this.folder = folder; // dataset directory
+		this.nThreads = nThreads; // number of threads
 	}
 
 	public void indexHash()	{
 		dictionary = new ConcurrentHashMap<String, Map<String, Integer>>(100000, (float)0.75, nThreads);
+
+//		Not using pre-builded Imdb vocabulary because of time economy
 //		fillVocabulary();
+
+//		select files for indexing
 		FileProcessor fp = new FileProcessor();
 		fp.listFilesForFolder(folder);
-//		System.out.println(fp.files.size());
 
+//		multi-thread index building
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		ArrayList<Future> futures = new ArrayList<>();
 		parsers = new ArrayList<>();
-
 		try {
 
 			for (int i = 0; i < nThreads; i++)
 				futures.add(executor.submit(new Async.ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)))));
-
 			for (Future future : futures)
 				future.get();
-
 			executor.shutdown();
 
-//			System.out.println("Total: " + dictionary.size());
 		}
 		catch (Exception e){}
 	}
 
+
+//	alternative realization using non-blocking tree map
 	public void indexTree()	{
 		dictionary = new ConcurrentSkipListMap<>();
+
+//		Not using pre-builded Imdb vocabulary because of time economy
 //		fillVocabulary();
+
+//		select files for indexing
 		FileProcessor fp = new FileProcessor();
 		fp.listFilesForFolder(folder);
-//		System.out.println(fp.files.size());
 
+//		multi-thread index building
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 		ArrayList<Future> futures = new ArrayList<>();
 		parsers = new ArrayList<>();
@@ -60,17 +66,15 @@ public class Async {
 
 			for (int i = 0; i < nThreads; i++)
 				futures.add(executor.submit(new ParserAsync(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads)))));
-
 			for (Future future : futures)
 				future.get();
-
 			executor.shutdown();
 
-//			System.out.println("Total: " + dictionary.size());
 		}
 		catch (Exception e){}
 	}
 
+//	add pre-build vocabulary
 	public void fillVocabulary()	{
 		try {
 			Scanner vocabScanner = new Scanner(vocab);
@@ -83,6 +87,7 @@ public class Async {
 		}
 	}
 
+//	search files contain all requested words
 	public void search(String request)  {
 		String[] words = request.trim().toLowerCase().split(" +");
 		Set<String> result = new HashSet<>(dictionary.get(words[0]).keySet());
@@ -94,6 +99,7 @@ public class Async {
 		}
 	}
 
+//	parsing files and building inverted index
 	class ParserAsync implements Runnable {
 
 		ArrayList<File> files;
@@ -102,6 +108,7 @@ public class Async {
 			this.files = files;
 		}
 
+//		parse filename into id
 		public String getDocID(File file)	{
 			if (file != null)
 			{
@@ -111,6 +118,7 @@ public class Async {
 			return null;
 		}
 
+//		parse file into words
 		public ArrayList<String> parse(File file)	{
 			try {
 				Scanner sc = new Scanner(file);
@@ -137,6 +145,8 @@ public class Async {
 			}
 			return null;
 		}
+
+//		thread function to build index
 		@Override
 		public void run() {
 			long start = System.currentTimeMillis();

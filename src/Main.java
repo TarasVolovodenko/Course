@@ -19,13 +19,18 @@ public class Main {
 			System.out.println(end - start);
 		}
 		System.out.println(th / 10);
+
 //		Search test
 		Scanner sc = new Scanner(System.in);
 		a = new Async(4, vocab, folder);
 		a.indexHash();
+
+		// user interface
 		while (true) {
+
 			System.out.println("S -- search\nE -- exit");
 			String command = sc.nextLine(), request;
+
 			if (command.toLowerCase().equals("e"))
 				return;
 			if (command.toLowerCase().equals("s"))	{
