@@ -17,12 +17,12 @@ public class Main {
 				else folders.add(new File(args[i]));
 			}
 			if (folders.size() == 0) {
-				System.out.print("Illegal arguments. Try again.\njava Main [-j <threads amount>] [-v <vocabulary-path>]");
+				System.out.print("Illegal arguments. Try again.\njava Main [-j <threads amount>] [-v <vocabulary-path>] <dataset path 1> [, <dataset path 2>...]");
 				return;
 			}
 		}
 		catch (Exception e)	{
-			System.out.print("Illegal arguments. Try again.\njava Main [-j <threads amount>] [-v <vocabulary-path>]");
+			System.out.print("Illegal arguments. Try again.\njava Main [-j <threads amount>] [-v <vocabulary-path>] <dataset path 1> [, <dataset path 2>...]");
 			return;
 		}
 
