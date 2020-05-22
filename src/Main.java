@@ -1,37 +1,48 @@
-import java.io.FileDescriptor;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import java.io.File;
 
 public class Main {
-	public static void main(String[]args)
-	{
-		FileProcessor fp = new FileProcessor();
-		final File folder = new File("/home/taras/study/parallel/aclImdb/");
+	public static void main(String[]args) {
 
-		int nThreads = 2000;
+		final File folder = new File(args[1]), vocab = new File(args[0]);
+		final int nThreads = Integer.parseInt(args[2]);
+		Async a = null;
+		long start, end, th = 0;
 
-		fp.listFilesForFolder(folder);
-		System.out.println(fp.files.size());
-		ArrayList<Parser> parsers = new ArrayList<>();
-		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-		ArrayList<Map<String, Integer>> results = new ArrayList<>();
-		try {
-			for (int i = 0; i < nThreads; i++)
-				parsers.add(new Parser(new ArrayList<File>(fp.files.subList(i * fp.files.size() / nThreads, (i + 1) * fp.files.size() / nThreads))));
-			for (Future<Map<String, Integer>> result : executor.invokeAll(parsers)) {
-				results.add(result.get());
-			}
-			executor.shutdown();
-			int s = 0;
-			for (Map<String, Integer> m : results)
-			{
-				s += m.size();
-				System.out.println(m.size());
-			}
-			System.out.println("Total: " + s);
+//		Speed test
+		for (int i = 0; i < 10; i++) {
+			a = new Async(nThreads, vocab, folder);
+			start = System.currentTimeMillis();
+			a.indexHash();
+			end = System.currentTimeMillis();
+			th += end - start;
+			System.out.println(end - start);
 		}
-		catch (Exception e){}
+		System.out.println(th / 10);
+
+//		Search test
+		Scanner sc = new Scanner(System.in);
+		a = new Async(4, vocab, folder);
+		a.indexHash();
+
+		// user interface
+		while (true) {
+
+			System.out.println("S -- search\nE -- exit");
+			String command = sc.nextLine(), request;
+
+			if (command.toLowerCase().equals("e"))
+				return;
+			if (command.toLowerCase().equals("s"))	{
+				System.out.println("Search request: ");
+				request = sc.nextLine();
+				start = System.nanoTime();
+				a.search(request);
+				end = System.nanoTime();
+				System.out.println("Elapsed time: " + (end - start) / 1000 + " us.");
+			}
+			else
+				System.out.println("Unknown command. Try again.");
+		}
 	}
 }
